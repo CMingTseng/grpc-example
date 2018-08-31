@@ -1,11 +1,6 @@
-apply plugin: 'com.google.protobuf'
 apply plugin: 'java-library'
-
-apply from: file("${project(':proto').projectDir}/proto-deps.gradle")
-
-dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-}
+apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
 
 protobuf {
     protoc {
@@ -35,5 +30,31 @@ protobuf {
     }
 }
 
+idea {
+    module {
+        // Hint for autocompleting generated proto classes
+        // Not using generatedSourceDirs because of
+        // https://discuss.gradle.org/t/support-for-intellij-2016/15294/8
+        sourceDirs += file("${project(':proto').projectDir}/build/generated/source/proto/main/lite")
+        sourceDirs += file("${project(':proto').projectDir}/build/generated/source/proto/main/grpc")
+    }
+}
+
+configurations.all {
+    resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.2'
+}
+
+dependencies {
+    implementation 'javax.annotation:javax.annotation-api:1.2'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    // For protos
+    implementation "io.grpc:grpc-netty:1.14.0"
+    implementation 'com.google.protobuf:protobuf-java:3.6.1'
+    implementation 'io.grpc:grpc-okhttp:1.14.0'
+    implementation 'io.grpc:grpc-stub:1.14.0'
+    implementation('io.grpc:grpc-protobuf-lite:1.14.0') {
+        exclude module: "protobuf-lite"
+    }
+}
 sourceCompatibility = "1.8"
 targetCompatibility = "1.8"

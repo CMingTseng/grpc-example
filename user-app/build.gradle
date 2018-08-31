@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
-
-apply from: file("${project(':proto').projectDir}/proto-deps.gradle")
+apply plugin: 'com.google.protobuf'
+apply plugin: 'idea'
 
 android {
     compileSdkVersion compileVersion
@@ -28,6 +28,19 @@ android {
             buildConfigField('int', 'RPC_SERVER_PORT', RpcServerPort)
         }
     }
+
+    sourceSets {
+        main {
+            proto {
+                srcDir '../proto/src/main/proto'
+            }
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java']
+            aidl.srcDirs = ['src/main/aidl']
+            res.srcDirs = ['src/main/res']
+            assets.srcDirs = ['src/main/assets']
+        }
+    }
     compileOptions {
         sourceCompatibility javasource
         targetCompatibility javatarget
@@ -38,15 +51,62 @@ android {
     }
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.6.1"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.14.0'
+        }
+        lite {
+            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                remove java
+            }
+            task.plugins {
+                lite {}
+                grpc {
+                    option 'lite'
+                }
+            }
+        }
+
+    }
+}
+
+idea {
+    module {
+        excludeDirs = [file('.gradle')]
+        if (buildDir.exists()) {
+            excludeDirs += files(buildDir.listFiles())
+            excludeDirs -= file("$buildDir/generated-sources")
+        }
+    }
+}
+
 configurations.all {
     resolutionStrategy.force 'com.google.code.findbugs:jsr305:3.0.2'
 }
 
 dependencies {
-    implementation project(":proto")
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+
+    implementation 'javax.annotation:javax.annotation-api:1.2'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation "io.grpc:grpc-netty:1.14.0"
+    implementation 'com.google.protobuf:protobuf-java:3.6.1'
+    implementation 'io.grpc:grpc-okhttp:1.14.0'
+    implementation 'io.grpc:grpc-stub:1.14.0'
+    implementation('io.grpc:grpc-protobuf-lite:1.14.0') {
+        exclude module: "protobuf-lite"
+    }
 }
