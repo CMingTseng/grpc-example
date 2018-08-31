@@ -1,0 +1,39 @@
+apply plugin: 'com.google.protobuf'
+apply plugin: 'java-library'
+
+apply from: file("${project(':proto').projectDir}/proto-deps.gradle")
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.6.1"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.14.0'
+        }
+        lite {
+            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                remove java
+            }
+            task.plugins {
+                lite {}
+                grpc {
+                    option 'lite'
+                }
+            }
+        }
+
+    }
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
