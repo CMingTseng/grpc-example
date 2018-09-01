@@ -1,8 +1,6 @@
 syntax = "proto3";
 package com.kantoniak.examplegrpc.proto;
 
-import "google/protobuf/timestamp.proto";
-
 option optimize_for = LITE_RUNTIME;
 option java_multiple_files = true;
 
